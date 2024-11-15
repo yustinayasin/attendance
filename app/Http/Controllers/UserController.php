@@ -14,7 +14,10 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
-        return view('users.index', compact('users'));
+        return response()->json([
+            'message' => 'Successfully retrieved all users',
+            'data' => $users,
+        ], 200);
     }
 
     // Show the form for creating a new user
@@ -63,14 +66,16 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         // Retrieve the authenticated user (this will be automatically validated by Sanctum)
-        $authenticatedUser = $request->user();
-        printf('Authorization Token: ' . $request->header('Authorization'));
+        // $authenticatedUser = $request->user();
+        // printf('Authorization Token: ' . $request->header('Authorization'));
 
+        // // Check if the authenticated user matches the requested user ID
+        // if ($authenticatedUser->id !== (int) $id) {
+        //     printf("aa");
+        //     return response()->json(['message' => 'Unauthorized'], 403);
+        // }
 
-        // Check if the authenticated user matches the requested user ID
-        if ($authenticatedUser->id !== (int) $id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        // printf($id);
 
         // Find the user by ID
         $user = User::find($id);
@@ -106,10 +111,16 @@ class UserController extends Controller
 
 
     // Delete a user from the database
-    public function destroy(User $user)
+    public function destroy($id)
     {
+        // Find the user by ID
+        $user = User::findOrFail($id);
+
+        // Delete the user
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully');
+
+        // Return a response, or redirect if using a web route
+        return response()->json(['message' => 'User deleted successfully'], 200);
     }
 
     public function showLoginForm(User $user)

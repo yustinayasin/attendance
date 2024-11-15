@@ -10,19 +10,16 @@ Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanc
 
 // User Registration (Sign-up Route)
 Route::post('/users/register', [UserController::class, 'store']);
-
-Route::middleware('auth:sanctum')->get('/test-auth', function (Request $request) {
-    return response()->json(['message' => 'Authenticated successfully', 'user' => $request->user()]);
-});
+Route::put('/user/{id}', [UserController::class, 'update']);
+Route::get('/users', [UserController::class, 'index']);
 
 // Protected User CRUD Routes
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::resource('users', UserController::class)->except(['create', 'edit']);
-    Route::put('/user/{id}', [UserController::class, 'update']);
+// Route::middleware(['auth:sanctum'])->group(function () {
+//     Route::resource('users', UserController::class)->except(['create', 'edit']);
 
-    // Route to get the authenticated user's data
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-});
+//     // Route to get the authenticated user's data
+//     Route::get('/user', function (Request $request) {
+//         return $request->user();
+//     });
+// });
 
