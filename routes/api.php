@@ -2,16 +2,18 @@
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+use App\Http\Controllers\EmployeeController;
 
-// Authentication Routes
 Route::post('/login', [UserController::class, 'login']);
-Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
-
-// User Registration (Sign-up Route)
+Route::post('/logout', [UserController::class, 'logout']);
 Route::post('/users/register', [UserController::class, 'store']);
 Route::put('/user/{id}', [UserController::class, 'update']);
 Route::get('/users', [UserController::class, 'index']);
+
+Route::get('/employees', [EmployeeController::class, 'index']);
+Route::post('/employees', [EmployeeController::class, 'store']);
+Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
 // Protected User CRUD Routes
 // Route::middleware(['auth:sanctum'])->group(function () {
@@ -22,4 +24,3 @@ Route::get('/users', [UserController::class, 'index']);
 //         return $request->user();
 //     });
 // });
-

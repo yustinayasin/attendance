@@ -19,7 +19,6 @@ class Employee extends Model
         'dob',      // Date of birth
         'city',
         'email',
-        'status',   // Active/Inactive status
     ];
 
     // Define the relationship with the User model

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();  // Auto-incrementing primary key
-            $table->foreignId('users_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');  // Employee's name
             $table->date('dob');  // Date of Birth
             $table->string('city');  // City

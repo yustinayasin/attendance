@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Models\AttendanceRecord;
+use App\Models\Employee;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -136,7 +139,56 @@ class UserController extends Controller
             'password' => 'required|string',
         ]);
 
-        printf("text");
+        if (Auth::attempt($credentials)) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            // Check if the user's account is active
+            if ($user->status !== 'active') {
+                Auth::logout();
+                return back()->withErrors(['status' => 'Your account is inactive.']);
+            }
+
+            try {
+                // Query the Employee model to get the employee_id
+                $employee = Employee::where('user_id', $user->id)->first();
+
+                // Check if no employee was found
+                if (!$employee) {
+                    return response()->json(['message' => 'Employee not found for the logged-in user'], 404);
+                }
+
+                // Create a new attendance record for the employee
+                AttendanceRecord::create([
+                    'employee_id' => $employee->id,
+                    'attendance_date' => now()->toDateString(),
+                    'status' => 'present',
+                    'check_in_time' => Carbon::now('Asia/Jakarta')->toTimeString(),
+                    'check_out_time' => null,
+                ]);
+
+                return response()->json([
+                    'message' => 'Login successful',
+                    'user' => $user,
+                ]);
+
+            } catch (\Exception $e) {
+                // Catch unexpected errors and return a 500 error with a message
+                return response()->json(['message' => 'An unexpected error occurred', 'error' => $e->getMessage()], 500);
+            }
+        }
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
 
         if (Auth::attempt($credentials)) {
             /** @var \App\Models\User $user */
@@ -148,28 +200,32 @@ class UserController extends Controller
                 return back()->withErrors(['status' => 'Your account is inactive.']);
             }
 
-            // Generate API token
-            $token = $user->createToken('attendance')->plainTextToken;
+            try {
+                // Find the latest attendance record for the user
+                $employee = Employee::where('user_id', $user->id)->first();
 
-            return response()->json([
-                'message' => 'Login successful',
-                'data' => ['token' => $token],
-            ], 200);
+                $attendanceRecord = AttendanceRecord::where('employee_id', $employee->id)
+                    ->whereNull('check_out_time') // Ensure it's the active session
+                    ->latest('attendance_date')
+                    ->first();
+
+                if ($attendanceRecord) {
+                    // Update the check-out time
+                    $attendanceRecord->update([
+                        'check_out_time' => Carbon::now('Asia/Jakarta')->toTimeString(),
+                    ]);
+                }
+
+                Auth::logout();
+
+                return response()->json([
+                    'message' => 'Logout successful',
+                ], 200);
+            } catch (\Exception $e) {
+                // Catch unexpected errors and return a 500 error with a message
+                return response()->json(['message' => 'An unexpected error occurred', 'error' => $e->getMessage()], 500);
+            }
         }
-
-        throw ValidationException::withMessages([
-            'email' => __('auth.failed'),
-        ]);
-    }
-
-    // Handle user logout
-    public function logout(Request $request)
-    {
-        $user = Auth::user();
-        $user->tokens->each(function ($token) {
-            $token->delete(); // Revoke all tokens for the user
-        });
-
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['message' => 'User is not logged in'], 401);
     }
 }

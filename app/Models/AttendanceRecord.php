@@ -15,7 +15,7 @@ class AttendanceRecord extends Model
     // Set the attributes that should be mass assignable
     protected $fillable = [
         'employee_id',    // Foreign key to the Employee table
-        'date',
+        'attendance_date',
         'status',         // Present, Absent, Late, etc.
         'check_in_time',  // The time the employee logged in
         'check_out_time', // The time the employee logged out
